@@ -1,0 +1,1017 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MilestonePay AI - Project Auditor & Milestone Management Platform</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                }
+            }
+        }
+    </script>
+    <style>
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased min-h-screen flex flex-col">
+
+    <!-- Notification Toast Container -->
+    <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <!-- App Wrapper -->
+    <div class="flex h-screen overflow-hidden">
+
+        <!-- Sidebar Navigation -->
+        <aside class="w-64 bg-slate-900 text-slate-300 flex flex-col border-r border-slate-800 flex-shrink-0 z-20">
+            <!-- Brand / Logo -->
+            <div class="p-5 border-b border-slate-800 flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-indigo-500/30">
+                    <i class="fa-solid fa-shield-halved"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-white text-lg tracking-wide">MilestonePay <span class="text-indigo-400 text-xs px-1.5 py-0.5 bg-indigo-950 border border-indigo-800 rounded-md">AI</span></h1>
+                    <p class="text-xs text-slate-400">Escrow & Audit Platform</p>
+                </div>
+            </div>
+
+            <!-- Project Selector widget -->
+            <div class="p-4 border-b border-slate-800 bg-slate-950/50">
+                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Active Project</label>
+                <select id="project-selector" class="w-full bg-slate-800 border border-slate-700 text-white text-sm rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                    <option value="ecommerce">E-commerce Website Redesign (₹1,00,000)</option>
+                    <option value="saas">SaaS Dashboard V2 Migration (₹2,50,000)</option>
+                </select>
+            </div>
+
+            <!-- Nav Links -->
+            <nav class="flex-1 overflow-y-auto px-3 py-4 space-y-1">
+                <button onclick="switchTab('dashboard')" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all text-slate-300 hover:bg-slate-800 hover:text-white active" data-target="dashboard">
+                    <i class="fa-solid fa-chart-pie w-5 text-indigo-400"></i> Dashboard & Overview
+                </button>
+                <button onclick="switchTab('traceability')" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all text-slate-300 hover:bg-slate-800 hover:text-white" data-target="traceability">
+                    <i class="fa-solid fa-diagram-project w-5 text-indigo-400"></i> Requirement Matrix
+                </button>
+                <button onclick="switchTab('auditor')" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all text-slate-300 hover:bg-slate-800 hover:text-white" data-target="auditor">
+                    <i class="fa-solid fa-robot w-5 text-indigo-400"></i> AI Project Auditor
+                </button>
+                <button onclick="switchTab('testing')" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all text-slate-300 hover:bg-slate-800 hover:text-white" data-target="testing">
+                    <i class="fa-solid fa-vial-circle-check w-5 text-indigo-400"></i> Automated Testing & QA
+                </button>
+                <button onclick="switchTab('costs')" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all text-slate-300 hover:bg-slate-800 hover:text-white" data-target="costs">
+                    <i class="fa-solid fa-file-invoice-dollar w-5 text-indigo-400"></i> Cost & Scope Changes
+                </button>
+                <button onclick="switchTab('risk')" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all text-slate-300 hover:bg-slate-800 hover:text-white" data-target="risk">
+                    <i class="fa-solid fa-triangle-exclamation w-5 text-amber-400"></i> Risk & Confidence
+                </button>
+                <button onclick="switchTab('milestones')" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all text-slate-300 hover:bg-slate-800 hover:text-white" data-target="milestones">
+                    <i class="fa-solid fa-vault w-5 text-emerald-400"></i> Milestone Payment Gate
+                </button>
+            </nav>
+
+            <!-- Footer User Info -->
+            <div class="p-4 border-t border-slate-800 flex items-center gap-3 bg-slate-950">
+                <div class="w-9 h-9 rounded-full bg-indigo-600/30 border border-indigo-500/40 flex items-center justify-center text-indigo-300 font-bold text-sm">
+                    JD
+                </div>
+                <div class="overflow-hidden">
+                    <p class="text-sm font-medium text-white truncate">John (Lead Auditor)</p>
+                    <p class="text-xs text-emerald-400 flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Connected</p>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="flex-1 flex flex-col min-w-0 overflow-y-auto">
+            <!-- Top Header Bar -->
+            <header class="bg-white border-b border-slate-200 px-8 py-4 flex items-center justify-between sticky top-0 z-10 shadow-sm">
+                <div>
+                    <h2 id="view-title" class="text-xl font-bold text-slate-900">Dashboard & Overview</h2>
+                    <p id="view-subtitle" class="text-xs text-slate-500">Real-time health, financials, and project traceability status.</p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <button onclick="resetDemoData()" class="px-3 py-1.5 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg transition-all border border-slate-300 flex items-center gap-1.5">
+                        <i class="fa-solid fa-rotate-right"></i> Reset Demo State
+                    </button>
+                    <button onclick="exportAllDataJSON()" class="px-3 py-1.5 text-xs font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-all border border-indigo-200 flex items-center gap-1.5">
+                        <i class="fa-solid fa-download"></i> Export Audit JSON
+                    </button>
+                </div>
+            </header>
+
+            <!-- Dynamic View Container -->
+            <div class="p-8 max-w-7xl mx-auto w-full space-y-6">
+
+                <!-- VIEW 1: DASHBOARD & OVERVIEW -->
+                <div id="tab-dashboard" class="tab-content active space-y-6">
+                    <!-- Metric Cards Grid -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
+                        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                            <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Budget</p>
+                            <h3 id="stat-total-budget" class="text-2xl font-extrabold text-slate-900 mt-1">₹1,00,000</h3>
+                            <p class="text-xs text-slate-400 mt-1">Base Contract</p>
+                        </div>
+                        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                            <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Approved Cost</p>
+                            <h3 id="stat-approved-cost" class="text-2xl font-extrabold text-indigo-600 mt-1">₹1,00,000</h3>
+                            <p id="stat-pending-change" class="text-xs text-amber-600 font-medium mt-1">+₹6,400 pending</p>
+                        </div>
+                        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                            <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Escrowed Funds</p>
+                            <h3 id="stat-escrow" class="text-2xl font-extrabold text-amber-600 mt-1">₹60,000</h3>
+                            <p class="text-xs text-slate-400 mt-1">Secured in vault</p>
+                        </div>
+                        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                            <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Released Payments</p>
+                            <h3 id="stat-released" class="text-2xl font-extrabold text-emerald-600 mt-1">₹40,000</h3>
+                            <p class="text-xs text-slate-400 mt-1">Milestone 1 settled</p>
+                        </div>
+                        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                            <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Active Risks</p>
+                            <h3 id="stat-risks" class="text-2xl font-extrabold text-rose-600 mt-1">2 High</h3>
+                            <p class="text-xs text-rose-500 mt-1">Checkout & QA failure</p>
+                        </div>
+                        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                            <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Requirement %</p>
+                            <h3 id="stat-completion" class="text-2xl font-extrabold text-indigo-600 mt-1">75%</h3>
+                            <p class="text-xs text-slate-400 mt-1">3 of 4 verified</p>
+                        </div>
+                    </div>
+
+                    <!-- Alert Banner -->
+                    <div class="bg-amber-50 border-l-4 border-amber-500 p-4 rounded-xl shadow-sm flex items-start justify-between">
+                        <div class="flex items-start gap-3">
+                            <i class="fa-solid fa-triangle-exclamation text-amber-600 text-lg mt-0.5"></i>
+                            <div>
+                                <h4 class="text-sm font-bold text-amber-900">Milestone 2 Payment Gate Locked</h4>
+                                <p class="text-xs text-amber-700 mt-0.5">Automated tests detected a checkout payment gateway timeout error. Required test evidence proof is incomplete. Human approval is withheld until resolution.</p>
+                            </div>
+                        </div>
+                        <button onclick="switchTab('milestones')" class="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold rounded-lg shadow transition-all whitespace-nowrap">
+                            Review Gate <i class="fa-solid fa-arrow-right ml-1"></i>
+                        </button>
+                    </div>
+
+                    <!-- Grid Layout for Dashboard widgets -->
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <!-- Left 2 Cols: Requirements & Traceability Overview -->
+                        <div class="lg:col-span-2 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                            <div class="flex items-center justify-between">
+                                <h3 class="font-bold text-slate-900 text-base flex items-center gap-2">
+                                    <i class="fa-solid fa-diagram-project text-indigo-600"></i> Requirement Traceability Summary
+                                </h3>
+                                <button onclick="switchTab('traceability')" class="text-xs font-semibold text-indigo-600 hover:text-indigo-800">View Full Matrix &rarr;</button>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left text-xs">
+                                    <thead class="bg-slate-50 text-slate-500 uppercase font-semibold border-b border-slate-200">
+                                        <tr>
+                                            <th class="p-3">ID & Title</th>
+                                            <th class="p-3">Dev Task / PR</th>
+                                            <th class="p-3">Test Status</th>
+                                            <th class="p-3">Verification</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="dash-req-table" class="divide-y divide-slate-100">
+                                        <!-- Populated via JS -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Right Col: Recent Audit Log & Activity -->
+                        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4 flex flex-col">
+                            <h3 class="font-bold text-slate-900 text-base flex items-center gap-2">
+                                <i class="fa-solid fa-shield-cat text-indigo-600"></i> Recent Audit Log
+                            </h3>
+                            <div id="audit-log-container" class="space-y-3 flex-1 overflow-y-auto max-h-[350px] pr-1">
+                                <!-- Populated via JS -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- VIEW 2: REQUIREMENT TRACEABILITY MATRIX -->
+                <div id="tab-traceability" class="tab-content space-y-6">
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                            <div>
+                                <h3 class="font-bold text-slate-900 text-base">Requirement Traceability Matrix (RTM)</h3>
+                                <p class="text-xs text-slate-500">Mapping client requirements directly to code changes, test suites, and cryptographic proof.</p>
+                            </div>
+                            <button onclick="openReqModal()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl shadow transition-all flex items-center gap-2">
+                                <i class="fa-solid fa-plus"></i> Add Requirement
+                            </button>
+                        </div>
+
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-sm">
+                                <thead class="bg-slate-50 text-slate-600 uppercase font-semibold text-xs border-b border-slate-200">
+                                    <tr>
+                                        <th class="p-3">Req ID</th>
+                                        <th class="p-3">Client Requirement</th>
+                                        <th class="p-3">Dev Task & Code PR</th>
+                                        <th class="p-3">Test Status</th>
+                                        <th class="p-3">Evidence Proof</th>
+                                        <th class="p-3 text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="rtm-table-body" class="divide-y divide-slate-100">
+                                    <!-- Populated via JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- VIEW 3: AI PROJECT AUDITOR & REPORTS -->
+                <div id="tab-auditor" class="tab-content space-y-6">
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <!-- Left Control Panel -->
+                        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-5">
+                            <h3 class="font-bold text-slate-900 text-base flex items-center gap-2">
+                                <i class="fa-solid fa-robot text-indigo-600"></i> AI Auditor Control
+                            </h3>
+                            <p class="text-xs text-slate-500">Our automated auditor parses commit diffs, requirement parameters, and test runner logs against client contracts.</p>
+                            
+                            <div class="space-y-3">
+                                <label class="block text-xs font-semibold text-slate-700">Audit Depth</label>
+                                <select id="audit-depth" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-indigo-500">
+                                    <option value="deep">Deep Semantic Code & Test Audit</option>
+                                    <option value="quick">Fast Compliance Scan</option>
+                                </select>
+                            </div>
+
+                            <button onclick="runAIAudit()" id="run-audit-btn" class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl shadow-md transition-all flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-wand-magic-sparkles"></i> Run AI Audit Analysis
+                            </button>
+
+                            <div class="border-t border-slate-200 pt-4 space-y-2">
+                                <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Export Options</h4>
+                                <div class="flex gap-2">
+                                    <button onclick="exportAuditReport('json')" class="flex-1 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg border border-slate-300 transition-all">Export JSON</button>
+                                    <button onclick="exportAuditReport('csv')" class="flex-1 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg border border-slate-300 transition-all">Export CSV</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right Output Panel -->
+                        <div class="lg:col-span-2 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                            <div class="flex items-center justify-between border-b border-slate-200 pb-3">
+                                <div>
+                                    <h3 class="font-bold text-slate-900 text-base">Client-Ready Audit Report</h3>
+                                    <p id="audit-timestamp" class="text-xs text-slate-400">Last scanned: Preloaded Demo Snapshot</p>
+                                </div>
+                                <span id="audit-status-badge" class="px-3 py-1 bg-amber-100 text-amber-800 text-xs font-bold rounded-full">Conditional Pass (2 Bugs)</span>
+                            </div>
+
+                            <div id="audit-report-body" class="space-y-4 text-sm text-slate-700 leading-relaxed max-h-[500px] overflow-y-auto pr-2">
+                                <!-- Populated via JS -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- VIEW 4: AUTOMATED TESTING & QA -->
+                <div id="tab-testing" class="tab-content space-y-6">
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-5">
+                        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                            <div>
+                                <h3 class="font-bold text-slate-900 text-base">Automated Testing & QA Results</h3>
+                                <p class="text-xs text-slate-500">Distinguishing verified test executions with signed cryptographic hashes from unverified claims.</p>
+                            </div>
+                            <button onclick="openTestModal()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl shadow transition-all flex items-center gap-2">
+                                <i class="fa-solid fa-plus"></i> Add Test Result
+                            </button>
+                        </div>
+
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-sm">
+                                <thead class="bg-slate-50 text-slate-600 uppercase font-semibold text-xs border-b border-slate-200">
+                                    <tr>
+                                        <th class="p-3">Test ID & Suite</th>
+                                        <th class="p-3">Category</th>
+                                        <th class="p-3">Status</th>
+                                        <th class="p-3">Execution Time / Proof</th>
+                                        <th class="p-3">Assertion Logs / Notes</th>
+                                        <th class="p-3 text-right">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="qa-table-body" class="divide-y divide-slate-100">
+                                    <!-- Populated via JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- VIEW 5: COST ESTIMATOR & SCOPE CHANGES -->
+                <div id="tab-costs" class="tab-content space-y-6">
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <!-- Summary Financial Cards -->
+                        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-5">
+                            <h3 class="font-bold text-slate-900 text-base">Budget & Scope Summary</h3>
+                            <div class="space-y-3">
+                                <div class="flex justify-between items-center p-3 bg-slate-50 rounded-xl">
+                                    <span class="text-xs font-semibold text-slate-600">Base Contract Cost:</span>
+                                    <span id="cost-base" class="text-sm font-bold text-slate-900">₹1,00,000</span>
+                                </div>
+                                <div class="flex justify-between items-center p-3 bg-slate-50 rounded-xl">
+                                    <span class="text-xs font-semibold text-slate-600">Approved Change Requests:</span>
+                                    <span id="cost-approved-cr" class="text-sm font-bold text-emerald-600">₹0</span>
+                                </div>
+                                <div class="flex justify-between items-center p-3 bg-amber-50 rounded-xl border border-amber-200">
+                                    <span class="text-xs font-semibold text-amber-900">Pending Scope Additions:</span>
+                                    <span id="cost-pending-cr" class="text-sm font-bold text-amber-600">+₹6,400</span>
+                                </div>
+                                <div class="flex justify-between items-center p-3 bg-indigo-50 rounded-xl border border-indigo-200">
+                                    <span class="text-xs font-semibold text-indigo-900 font-bold">Total Approved Budget:</span>
+                                    <span id="cost-total-approved" class="text-base font-extrabold text-indigo-700">₹1,00,000</span>
+                                </div>
+                            </div>
+                            <button onclick="openScopeModal()" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl shadow transition-all flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-plus"></i> Propose New Feature / Scope Change
+                            </button>
+                        </div>
+
+                        <!-- Scope Change Requests Table -->
+                        <div class="lg:col-span-2 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                            <h3 class="font-bold text-slate-900 text-base">Scope Change Requests & Defect Adjustments</h3>
+                            <p class="text-xs text-slate-500">Unapproved features never inflate the approved budget until explicitly authorized by the client.</p>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left text-sm">
+                                    <thead class="bg-slate-50 text-slate-600 uppercase font-semibold text-xs border-b border-slate-200">
+                                        <tr>
+                                            <th class="p-3">CR ID & Title</th>
+                                            <th class="p-3">Cost Impact</th>
+                                            <th class="p-3">Timeline</th>
+                                            <th class="p-3">Client Status</th>
+                                            <th class="p-3 text-right">Approval Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="scope-table-body" class="divide-y divide-slate-100">
+                                        <!-- Populated via JS -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- VIEW 6: RISK & CONFIDENCE DASHBOARD -->
+                <div id="tab-risk" class="tab-content space-y-6">
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-5">
+                        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                            <div>
+                                <h3 class="font-bold text-slate-900 text-base">Risk & Confidence Dashboard</h3>
+                                <p class="text-xs text-slate-500">Evaluating verification scores, evidence sources, and unresolved questions across deliverables.</p>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <span class="px-3 py-1 bg-amber-100 text-amber-800 text-xs font-bold rounded-lg">Overall Confidence: 68%</span>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="risk-cards-grid">
+                            <!-- Populated via JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- VIEW 7: MILESTONE PAYMENT GATE -->
+                <div id="tab-milestones" class="tab-content space-y-6">
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-6">
+                        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                            <div>
+                                <h3 class="font-bold text-slate-900 text-base">Milestone Payment Escrow & Evidence Gate</h3>
+                                <p class="text-xs text-slate-500">Simulated escrow release requires strict adherence to evidence uploads, QA passes, and human authorization.</p>
+                            </div>
+                            <div class="flex items-center gap-3 bg-slate-100 p-2 rounded-xl text-xs font-medium">
+                                <span>Vault Escrow: <strong class="text-amber-600">₹60,000</strong></span>
+                                <span class="text-slate-300">|</span>
+                                <span>Released: <strong class="text-emerald-600">₹40,000</strong></span>
+                            </div>
+                        </div>
+
+                        <div class="space-y-6" id="milestones-container">
+                            <!-- Populated via JS -->
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- MODAL: ADD / EDIT REQUIREMENT -->
+    <div id="req-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4">
+            <div class="flex justify-between items-center border-b border-slate-200 pb-3">
+                <h3 id="req-modal-title" class="font-bold text-slate-900 text-lg">Add Requirement</h3>
+                <button onclick="closeReqModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <form id="req-form" onsubmit="saveRequirement(event)" class="space-y-4">
+                <input type="hidden" id="req-edit-id">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Requirement ID</label>
+                    <input type="text" id="req-id" required placeholder="REQ-05" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Client Requirement Title & Description</label>
+                    <input type="text" id="req-title" required placeholder="User profile customization" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Assigned Dev Task / PR</label>
+                    <input type="text" id="req-task" required placeholder="PR #108 - Profile Module" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Test Status</label>
+                    <select id="req-test-status" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-indigo-500">
+                        <option value="Passed">Passed</option>
+                        <option value="Failed">Failed</option>
+                        <option value="Unverified">Unverified</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Evidence Proof URL / Hash</label>
+                    <input type="text" id="req-evidence" placeholder="git commit a7f92b or test_log.txt" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div class="flex justify-end gap-3 pt-3 border-t border-slate-200">
+                    <button type="button" onclick="closeReqModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl">Cancel</button>
+                    <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl">Save Requirement</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: ADD TEST RESULT -->
+    <div id="test-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4">
+            <div class="flex justify-between items-center border-b border-slate-200 pb-3">
+                <h3 class="font-bold text-slate-900 text-lg">Add Test Result</h3>
+                <button onclick="closeTestModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <form onsubmit="saveTestResult(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Test ID & Title</label>
+                    <input type="text" id="test-id" required placeholder="TST-04: Inventory Sync Test" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Category</label>
+                    <select id="test-category" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-indigo-500">
+                        <option value="Unit Test">Unit Test</option>
+                        <option value="Integration Test">Integration Test</option>
+                        <option value="Regression Test">Regression Test</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Status</label>
+                    <select id="test-status" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-indigo-500">
+                        <option value="Passed">Passed</option>
+                        <option value="Failed">Failed</option>
+                        <option value="Unverified">Unverified</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Assertion Logs / Notes</label>
+                    <input type="text" id="test-logs" required placeholder="Response 200 OK, sync verified in 120ms" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div class="flex justify-end gap-3 pt-3 border-t border-slate-200">
+                    <button type="button" onclick="closeTestModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl">Cancel</button>
+                    <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl">Save Test</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: PROPOSE SCOPE CHANGE -->
+    <div id="scope-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4">
+            <div class="flex justify-between items-center border-b border-slate-200 pb-3">
+                <h3 class="font-bold text-slate-900 text-lg">Propose Scope Change / New Feature</h3>
+                <button onclick="closeScopeModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <form onsubmit="saveScopeChange(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Change Request Title</label>
+                    <input type="text" id="scope-title" required placeholder="CR-02: Express Apple Pay Integration" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Cost Impact (₹)</label>
+                        <input type="number" id="scope-cost" required placeholder="6400" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Timeline Impact</label>
+                        <input type="text" id="scope-timeline" required placeholder="2 Days" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Business Reason & Scope Description</label>
+                    <textarea id="scope-desc" required placeholder="Adding one-click Apple Pay checkout to increase mobile conversion rate by 15%." class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-indigo-500 h-20"></textarea>
+                </div>
+                <div class="flex justify-end gap-3 pt-3 border-t border-slate-200">
+                    <button type="button" onclick="closeScopeModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl">Cancel</button>
+                    <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl">Submit Proposal (Pending)</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- APPLICATION LOGIC & STATE -->
+    <script>
+        // Default Demo State
+        const defaultState = {
+            project: {
+                name: "E-commerce Website Redesign",
+                baseBudget: 100000,
+                contingency: 10000,
+                escrow: 60000,
+                released: 40000
+            },
+            requirements: [
+                { id: "REQ-01", title: "User Auth & JWT Session", task: "PR #102 - Auth Engine", status: "Passed", evidence: "git commit 8f3c21a (Verified)" },
+                { id: "REQ-02", title: "Product Catalog & Filters", task: "PR #105 - Catalog UI", status: "Passed", evidence: "git commit 4b9e11f (Verified)" },
+                { id: "REQ-03", title: "Secure Checkout & Payment Gateway", task: "PR #112 - Gateway Integration", status: "Failed", evidence: "test_checkout_timeout.log (FAILED)" },
+                { id: "REQ-04", title: "Order History & Invoicing", task: "PR #118 - Order Ledger", status: "Unverified", evidence: "NOT VERIFIED (Missing proof)" }
+            ],
+            tests: [
+                { id: "TST-01", name: "JWT Token Generation & Expiry", category: "Unit Test", status: "Passed", time: "2026-03-30 10:14", logs: "Assertion ok: token expires in 3600s" },
+                { id: "TST-02", name: "Catalog Search & Facet Filters", category: "Integration Test", status: "Passed", time: "2026-03-30 11:20", logs: "Fetched 45 items in 84ms" },
+                { id: "TST-03", name: "Checkout Payment Gateway Timeout", category: "Regression Test", status: "Failed", time: "2026-03-30 14:05", logs: "Error 504 Gateway Timeout on Stripe webhook handshake" }
+            ],
+            scopeChanges: [
+                { id: "CR-01", title: "Multi-currency Support", cost: 12000, timeline: "3 Days", status: "Approved", desc: "Added currency switcher for USD/EUR." },
+                { id: "CR-02", title: "Express Apple Pay Integration", cost: 6400, timeline: "2 Days", status: "Pending", desc: "One-click Apple Pay checkout button on cart page." }
+            ],
+            milestones: [
+                { 
+                    id: "M1", 
+                    title: "Milestone 1: Setup, Auth & Catalog", 
+                    amount: 40000, 
+                    status: "Released", 
+                    evidenceUploaded: true, 
+                    humanApproved: true,
+                    evidenceNote: "All auth and catalog test suites passed cryptographic verification.",
+                    reviewer: "Sarah Jenkins (Lead Client Reviewer)"
+                },
+                { 
+                    id: "M2", 
+                    title: "Milestone 2: Checkout, Payment Gateway & QA", 
+                    amount: 50000, 
+                    status: "Blocked", 
+                    evidenceUploaded: false, 
+                    humanApproved: false,
+                    evidenceNote: "BLOCKED: Checkout payment gateway timeout test failed. Missing test verification for REQ-04.",
+                    reviewer: "Sarah Jenkins (Lead Client Reviewer)"
+                },
+                { 
+                    id: "M3", 
+                    title: "Milestone 3: Final Deployment & Handover", 
+                    amount: 10000, 
+                    status: "Locked", 
+                    evidenceUploaded: false, 
+                    humanApproved: false,
+                    evidenceNote: "Awaiting Milestone 2 clearance.",
+                    reviewer: "Sarah Jenkins (Lead Client Reviewer)"
+                }
+            ],
+            auditLogs: [
+                { time: "14:05", type: "error", text: "Automated test TST-03 failed: Gateway Timeout." },
+                { time: "12:30", type: "info", text: "New scope change proposal CR-02 submitted (+₹6,400)." },
+                { time: "10:15", type: "success", text: "Milestone 1 payment of ₹40,000 successfully released from escrow." }
+            ]
+        };
+
+        let state = JSON.parse(localStorage.getItem('milestonepay_state')) || JSON.parse(JSON.stringify(defaultState));
+
+        function saveState() {
+            localStorage.setItem('milestonepay_state', JSON.stringify(state));
+            renderAll();
+        }
+
+        function resetDemoData() {
+            state = JSON.parse(JSON.stringify(defaultState));
+            saveState();
+            showToast("Demo state successfully reset to default scenario.", "success");
+        }
+
+        // Navigation tab switcher
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('bg-slate-800', 'text-white'));
+            
+            document.getElementById('tab-' + tabId).classList.add('active');
+            const activeBtn = document.querySelector(`[data-target="${tabId}"]`);
+            if(activeBtn) activeBtn.classList.add('bg-slate-800', 'text-white');
+
+            // Update header title
+            const titles = {
+                dashboard: ["Dashboard & Overview", "Real-time health, financials, and project traceability status."],
+                traceability: ["Requirement Traceability Matrix", "Mapping client requirements to dev tasks, test suites, and cryptographic proof."],
+                auditor: ["AI Project Auditor & Reports", "Automated analysis comparing code commits against client specifications."],
+                testing: ["Automated Testing & QA", "Rigorous tracking of unit, integration, and regression test suites."],
+                costs: ["Cost Estimator & Scope Changes", "Managing original contract costs, change requests, and client approvals."],
+                risk: ["Risk & Confidence Report", "Highlighting verification gaps, confidence scores, and missing evidence."],
+                milestones: ["Milestone Payment Gate", "Evidence-gated escrow release requiring strict verification and human sign-off."]
+            };
+            if(titles[tabId]) {
+                document.getElementById('view-title').innerText = titles[tabId][0];
+                document.getElementById('view-subtitle').innerText = titles[tabId][1];
+            }
+        }
+
+        // Render All UI Elements
+        function renderAll() {
+            renderDashboard();
+            renderRTM();
+            renderQA();
+            renderCosts();
+            renderRisk();
+            renderMilestones();
+            renderAuditLogs();
+        }
+
+        // View 1 & Stats
+        function renderDashboard() {
+            let approvedCRSum = state.scopeChanges.filter(c => c.status === 'Approved').reduce((acc, c) => acc + c.cost, 0);
+            let pendingCRSum = state.scopeChanges.filter(c => c.status === 'Pending').reduce((acc, c) => acc + c.cost, 0);
+            let totalApprovedCost = state.project.baseBudget + approvedCRSum;
+
+            document.getElementById('stat-total-budget').innerText = `₹${state.project.baseBudget.toLocaleString()}`;
+            document.getElementById('stat-approved-cost').innerText = `₹${totalApprovedCost.toLocaleString()}`;
+            document.getElementById('stat-pending-change').innerText = `+₹${pendingCRSum.toLocaleString()} pending`;
+            document.getElementById('stat-escrow').innerText = `₹${state.project.escrow.toLocaleString()}`;
+            document.getElementById('stat-released').innerText = `₹${state.project.released.toLocaleString()}`;
+            
+            // Completion %
+            let passedReqs = state.requirements.filter(r => r.status === 'Passed').length;
+            let totalReqs = state.requirements.length;
+            let compPct = Math.round((passedReqs / totalReqs) * 100);
+            document.getElementById('stat-completion').innerText = `${compPct}%`;
+
+            // Dashboard Requirement table snippet
+            let tbody = document.getElementById('dash-req-table');
+            tbody.innerHTML = state.requirements.map(r => `
+                <tr class="hover:bg-slate-50">
+                    <td class="p-3 font-semibold text-slate-900">${r.id}<br><span class="text-xs font-normal text-slate-500">${r.title}</span></td>
+                    <td class="p-3 text-slate-600">${r.task}</td>
+                    <td class="p-3">
+                        <span class="px-2 py-0.5 text-xs font-bold rounded-md ${r.status==='Passed'?'bg-emerald-100 text-emerald-800':r.status==='Failed'?'bg-rose-100 text-rose-800':'bg-amber-100 text-amber-800'}">${r.status}</span>
+                    </td>
+                    <td class="p-3 text-xs text-slate-500 truncate max-w-[150px]">${r.evidence}</td>
+                </tr>
+            `).join('');
+        }
+
+        // View 2: RTM
+        function renderRTM() {
+            let tbody = document.getElementById('rtm-table-body');
+            tbody.innerHTML = state.requirements.map(r => `
+                <tr class="hover:bg-slate-50">
+                    <td class="p-3 font-bold text-slate-900">${r.id}</td>
+                    <td class="p-3 font-medium text-slate-800">${r.title}</td>
+                    <td class="p-3 text-slate-600">${r.task}</td>
+                    <td class="p-3">
+                        <span class="px-2.5 py-1 text-xs font-bold rounded-lg ${r.status==='Passed'?'bg-emerald-100 text-emerald-800':r.status==='Failed'?'bg-rose-100 text-rose-800':'bg-amber-100 text-amber-800'}">${r.status}</span>
+                    </td>
+                    <td class="p-3 font-mono text-xs text-slate-600">${r.evidence.includes('NOT VERIFIED') ? '<span class="text-rose-600 font-bold bg-rose-50 px-2 py-0.5 rounded border border-rose-200">NOT VERIFIED</span>' : r.evidence}</td>
+                    <td class="p-3 text-right space-x-2">
+                        <button onclick="editRequirement('${r.id}')" class="text-indigo-600 hover:text-indigo-900 font-medium text-xs"><i class="fa-solid fa-pen"></i></button>
+                        <button onclick="deleteRequirement('${r.id}')" class="text-rose-600 hover:text-rose-900 font-medium text-xs"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // View 3: AI Auditor
+        function runAIAudit() {
+            const btn = document.getElementById('run-audit-btn');
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Analyzing Code & Test Suites...`;
+            btn.disabled = true;
+
+            setTimeout(() => {
+                btn.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles"></i> Run AI Audit Analysis`;
+                btn.disabled = false;
+                
+                document.getElementById('audit-timestamp').innerText = `Last scanned: Just now (${new Date().toLocaleTimeString()})`;
+                document.getElementById('audit-status-badge').className = "px-3 py-1 bg-rose-100 text-rose-800 text-xs font-bold rounded-full";
+                document.getElementById('audit-status-badge').innerText = "Action Required (1 Critical Bug)";
+
+                document.getElementById('audit-report-body').innerHTML = `
+                    <div class="p-4 bg-rose-50 border border-rose-200 rounded-xl space-y-2">
+                        <h4 class="font-bold text-rose-900 text-sm flex items-center gap-2"><i class="fa-solid fa-triangle-exclamation"></i> Critical Bug Detected: Checkout Payment Gateway Timeout</h4>
+                        <p class="text-xs text-rose-700">Test suite <strong>TST-03</strong> failed during Stripe webhook handshake simulation. Response status yielded HTTP 504 Gateway Timeout. This violates requirement <strong>REQ-03</strong>.</p>
+                    </div>
+                    <div class="p-4 bg-amber-50 border border-amber-200 rounded-xl space-y-2">
+                        <h4 class="font-bold text-amber-900 text-sm flex items-center gap-2"><i class="fa-solid fa-circle-exclamation"></i> Unverified Requirement Warning</h4>
+                        <p class="text-xs text-amber-700">Requirement <strong>REQ-04</strong> (Order History & Invoicing) lacks executed test proof. Marked as <strong>NOT VERIFIED</strong> in the RTM ledger.</p>
+                    </div>
+                    <div class="p-4 bg-indigo-50 border border-indigo-200 rounded-xl space-y-2">
+                        <h4 class="font-bold text-indigo-900 text-sm flex items-center gap-2"><i class="fa-solid fa-lightbulb"></i> Scope Change Audit</h4>
+                        <p class="text-xs text-indigo-700">Proposed Change Request <strong>CR-02</strong> (Express Apple Pay for ₹6,400) is currently pending explicit client authorization. Budget remains locked at ₹1,00,000 base.</p>
+                    </div>
+                    <div class="p-4 bg-emerald-50 border border-emerald-200 rounded-xl space-y-2">
+                        <h4 class="font-bold text-emerald-900 text-sm flex items-center gap-2"><i class="fa-solid fa-check-circle"></i> Passed Deliverables</h4>
+                        <p class="text-xs text-emerald-700">Milestone 1 (Auth & Catalog) successfully verified with 100% test coverage and cryptographic log hashes.</p>
+                    </div>
+                `;
+                showToast("AI Audit analysis completed successfully.", "success");
+            }, 1200);
+        }
+
+        function exportAuditReport(format) {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state, null, 2));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", `MilestonePay_Audit_Report.${format === 'json' ? 'json' : 'txt'}`);
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+            showToast(`Audit report exported as ${format.toUpperCase()}`, "success");
+        }
+
+        // View 4: QA & Testing
+        function renderQA() {
+            let tbody = document.getElementById('qa-table-body');
+            tbody.innerHTML = state.tests.map(t => `
+                <tr class="hover:bg-slate-50">
+                    <td class="p-3 font-bold text-slate-900">${t.id}<br><span class="text-xs font-normal text-slate-600">${t.name}</span></td>
+                    <td class="p-3 text-slate-600 text-xs">${t.category}</td>
+                    <td class="p-3">
+                        <span class="px-2.5 py-1 text-xs font-bold rounded-lg ${t.status==='Passed'?'bg-emerald-100 text-emerald-800':t.status==='Failed'?'bg-rose-100 text-rose-800':'bg-amber-100 text-amber-800'}">${t.status}</span>
+                    </td>
+                    <td class="p-3 font-mono text-xs text-slate-500">${t.time}</td>
+                    <td class="p-3 text-xs text-slate-700 font-mono">${t.logs}</td>
+                    <td class="p-3 text-right">
+                        <button onclick="deleteTest('${t.id}')" class="text-rose-600 hover:text-rose-900 text-xs font-medium"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // View 5: Cost & Scope Changes
+        function renderCosts() {
+            let approvedCRSum = state.scopeChanges.filter(c => c.status === 'Approved').reduce((acc, c) => acc + c.cost, 0);
+            let pendingCRSum = state.scopeChanges.filter(c => c.status === 'Pending').reduce((acc, c) => acc + c.cost, 0);
+            let totalApprovedCost = state.project.baseBudget + approvedCRSum;
+
+            document.getElementById('cost-base').innerText = `₹${state.project.baseBudget.toLocaleString()}`;
+            document.getElementById('cost-approved-cr').innerText = `₹${approvedCRSum.toLocaleString()}`;
+            document.getElementById('cost-pending-cr').innerText = `+₹${pendingCRSum.toLocaleString()}`;
+            document.getElementById('cost-total-approved').innerText = `₹${totalApprovedCost.toLocaleString()}`;
+
+            let tbody = document.getElementById('scope-table-body');
+            tbody.innerHTML = state.scopeChanges.map(c => `
+                <tr class="hover:bg-slate-50">
+                    <td class="p-3 font-bold text-slate-900">${c.id}<br><span class="text-xs font-normal text-slate-600">${c.title}</span></td>
+                    <td class="p-3 font-semibold text-slate-800">+₹${c.cost.toLocaleString()}</td>
+                    <td class="p-3 text-xs text-slate-600">${c.timeline}</td>
+                    <td class="p-3">
+                        <span class="px-2.5 py-1 text-xs font-bold rounded-lg ${c.status==='Approved'?'bg-emerald-100 text-emerald-800':'bg-amber-100 text-amber-800'}">${c.status}</span>
+                    </td>
+                    <td class="p-3 text-right">
+                        ${c.status === 'Pending' ? `
+                            <button onclick="approveScope('${c.id}')" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg shadow transition-all">Approve</button>
+                        ` : `
+                            <span class="text-xs text-emerald-600 font-semibold"><i class="fa-solid fa-check"></i> Authorized</span>
+                        `}
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function approveScope(id) {
+            let cr = state.scopeChanges.find(c => c.id === id);
+            if(cr) {
+                cr.status = 'Approved';
+                state.auditLogs.unshift({ time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}), type: 'success', text: `Client explicitly approved Scope Change ${cr.id} (+₹${cr.cost}). Budget updated.` });
+                saveState();
+                showToast(`Change request ${cr.id} approved. Budget updated.`, "success");
+            }
+        }
+
+        // View 6: Risk & Confidence
+        function renderRisk() {
+            let grid = document.getElementById('risk-cards-grid');
+            grid.innerHTML = `
+                <div class="p-5 bg-rose-50 border border-rose-200 rounded-2xl space-y-3">
+                    <div class="flex items-center justify-between">
+                        <span class="px-2.5 py-1 bg-rose-200 text-rose-900 text-xs font-extrabold rounded-lg">Critical Risk</span>
+                        <i class="fa-solid fa-triangle-exclamation text-rose-600 text-lg"></i>
+                    </div>
+                    <h4 class="font-bold text-slate-900 text-sm">Checkout Gateway Timeout</h4>
+                    <p class="text-xs text-slate-600">Test suite TST-03 failed. Payment capture API returns 504 error under load tests.</p>
+                    <p class="text-xs font-semibold text-rose-700">Evidence Source: test_checkout_timeout.log</p>
+                </div>
+                <div class="p-5 bg-amber-50 border border-amber-200 rounded-2xl space-y-3">
+                    <div class="flex items-center justify-between">
+                        <span class="px-2.5 py-1 bg-amber-200 text-amber-900 text-xs font-extrabold rounded-lg">Medium Risk</span>
+                        <i class="fa-solid fa-circle-exclamation text-amber-600 text-lg"></i>
+                    </div>
+                    <h4 class="font-bold text-slate-900 text-sm">Unverified Invoicing Module</h4>
+                    <p class="text-xs text-slate-600">Requirement REQ-04 lacks executed test assertions or signed cryptographic commit proof.</p>
+                    <p class="text-xs font-semibold text-amber-700">Status: NOT VERIFIED</p>
+                </div>
+                <div class="p-5 bg-emerald-50 border border-emerald-200 rounded-2xl space-y-3">
+                    <div class="flex items-center justify-between">
+                        <span class="px-2.5 py-1 bg-emerald-200 text-emerald-900 text-xs font-extrabold rounded-lg">Low Risk</span>
+                        <i class="fa-solid fa-shield-check text-emerald-600 text-lg"></i>
+                    </div>
+                    <h4 class="font-bold text-slate-900 text-sm">Auth & Catalog Modules</h4>
+                    <p class="text-xs text-slate-600">All unit tests passed with 100% signature verification and immutable audit logs.</p>
+                    <p class="text-xs font-semibold text-emerald-700">Evidence Source: git commit 8f3c21a</p>
+                </div>
+            `;
+        }
+
+        // View 7: Milestones & Escrow Release
+        function renderMilestones() {
+            let container = document.getElementById('milestones-container');
+            container.innerHTML = state.milestones.map((m, idx) => `
+                <div class="p-6 rounded-2xl border ${m.status==='Released'?'bg-emerald-50/40 border-emerald-200':m.status==='Blocked'?'bg-rose-50/40 border-rose-200':'bg-slate-50 border-slate-200'} space-y-4">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                        <div>
+                            <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Milestone ${idx+1}</span>
+                            <h4 class="text-base font-bold text-slate-900">${m.title} <span class="text-indigo-600 font-extrabold">₹${m.amount.toLocaleString()}</span></h4>
+                        </div>
+                        <span class="px-3 py-1 text-xs font-bold rounded-full ${m.status==='Released'?'bg-emerald-100 text-emerald-800':m.status==='Blocked'?'bg-rose-100 text-rose-800':'bg-slate-200 text-slate-700'}">${m.status}</span>
+                    </div>
+
+                    <div class="text-xs text-slate-600 bg-white p-3 rounded-xl border border-slate-200">
+                        <strong>Evidence Status:</strong> ${m.evidenceNote}
+                    </div>
+
+                    <div class="flex flex-wrap items-center justify-between gap-4 pt-2 border-t border-slate-200/60">
+                        <div class="flex items-center gap-6">
+                            <label class="flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer">
+                                <input type="checkbox" ${m.evidenceUploaded?'checked':''} onchange="toggleMilestoneEvidence('${m.id}')" class="w-4 h-4 text-indigo-600 rounded">
+                                Evidence Uploaded & Verified
+                            </label>
+                            <label class="flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer">
+                                <input type="checkbox" ${m.humanApproved?'checked':''} onchange="toggleMilestoneApproval('${m.id}')" class="w-4 h-4 text-indigo-600 rounded">
+                                Human Reviewer Sign-off (${m.reviewer})
+                            </label>
+                        </div>
+                        <div>
+                            ${m.status === 'Released' ? `
+                                <span class="text-xs font-bold text-emerald-600"><i class="fa-solid fa-circle-check"></i> Funds Released</span>
+                            ` : `
+                                <button onclick="releaseMilestoneFunds('${m.id}')" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-xl shadow transition-all flex items-center gap-1.5">
+                                    <i class="fa-solid fa-vault"></i> Release Simulated Escrow
+                                </button>
+                            `}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function toggleMilestoneEvidence(id) {
+            let m = state.milestones.find(x => x.id === id);
+            if(m) {
+                m.evidenceUploaded = !m.evidenceUploaded;
+                saveState();
+            }
+        }
+
+        function toggleMilestoneApproval(id) {
+            let m = state.milestones.find(x => x.id === id);
+            if(m) {
+                m.humanApproved = !m.humanApproved;
+                saveState();
+            }
+        }
+
+        function releaseMilestoneFunds(id) {
+            let m = state.milestones.find(x => x.id === id);
+            if(!m.evidenceUploaded || !m.humanApproved) {
+                showToast("Gate Blocked: Cannot release escrow without verified evidence and human reviewer sign-off.", "error");
+                return;
+            }
+            m.status = 'Released';
+            state.project.escrow -= m.amount;
+            state.project.released += m.amount;
+            state.auditLogs.unshift({ time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}), type: 'success', text: `Milestone ${m.id} payment of ₹${m.amount.toLocaleString()} successfully released from escrow vault.` });
+            saveState();
+            showToast(`Milestone ${m.id} funds successfully released!`, "success");
+        }
+
+        // Audit Logs list
+        function renderAuditLogs() {
+            let container = document.getElementById('audit-log-container');
+            container.innerHTML = state.auditLogs.map(l => `
+                <div class="p-3 bg-slate-50 rounded-xl border border-slate-100 flex items-start gap-3 text-xs">
+                    <span class="font-mono text-slate-400 whitespace-nowrap">${l.time}</span>
+                    <p class="text-slate-700 flex-1">${l.text}</p>
+                </div>
+            `).join('');
+        }
+
+        // Modals management
+        function openReqModal() { document.getElementById('req-modal').classList.remove('hidden'); }
+        function closeReqModal() { document.getElementById('req-modal').classList.add('hidden'); }
+        function saveRequirement(e) {
+            e.preventDefault();
+            let id = document.getElementById('req-id').value;
+            let title = document.getElementById('req-title').value;
+            let task = document.getElementById('req-task').value;
+            let status = document.getElementById('req-test-status').value;
+            let evidence = document.getElementById('req-evidence').value || 'NOT VERIFIED';
+
+            let existing = state.requirements.find(r => r.id === id);
+            if(existing) {
+                existing.title = title;
+                existing.task = task;
+                existing.status = status;
+                existing.evidence = evidence;
+            } else {
+                state.requirements.push({ id, title, task, status, evidence });
+            }
+            closeReqModal();
+            saveState();
+            showToast("Requirement saved successfully.", "success");
+        }
+        function deleteRequirement(id) {
+            state.requirements = state.requirements.filter(r => r.id !== id);
+            saveState();
+            showToast("Requirement deleted.", "info");
+        }
+
+        function openTestModal() { document.getElementById('test-modal').classList.remove('hidden'); }
+        function closeTestModal() { document.getElementById('test-modal').classList.add('hidden'); }
+        function saveTestResult(e) {
+            e.preventDefault();
+            let id = document.getElementById('test-id').value;
+            let name = document.getElementById('test-id').value;
+            let category = document.getElementById('test-category').value;
+            let status = document.getElementById('test-status').value;
+            let logs = document.getElementById('test-logs').value;
+            let time = new Date().toISOString().slice(0, 16).replace('T', ' ');
+
+            state.tests.push({ id, name, category, status, time, logs });
+            closeTestModal();
+            saveState();
+            showToast("Test result added.", "success");
+        }
+        function deleteTest(id) {
+            state.tests = state.tests.filter(t => t.id !== id);
+            saveState();
+            showToast("Test result deleted.", "info");
+        }
+
+        function openScopeModal() { document.getElementById('scope-modal').classList.remove('hidden'); }
+        function closeScopeModal() { document.getElementById('scope-modal').classList.add('hidden'); }
+        function saveScopeChange(e) {
+            e.preventDefault();
+            let title = document.getElementById('scope-title').value;
+            let cost = Number(document.getElementById('scope-cost').value);
+            let timeline = document.getElementById('scope-timeline').value;
+            let id = `CR-0${state.scopeChanges.length + 1}`;
+
+            state.scopeChanges.push({ id, title, cost, timeline, status: 'Pending', desc: document.getElementById('scope-desc').value });
+            closeScopeModal();
+            saveState();
+            showToast("Scope change proposal submitted (Pending Client Approval).", "success");
+        }
+
+        // Toast notifications
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `pointer-events-auto px-4 py-3 rounded-xl shadow-lg text-white text-xs font-semibold flex items-center gap-2 transition-all transform translate-y-2 opacity-0 ${type==='success'?'bg-emerald-600':type==='error'?'bg-rose-600':'bg-slate-800'}`;
+            toast.innerHTML = `<i class="fa-solid ${type==='success'?'fa-circle-check':type==='error'?'fa-circle-exclamation':'fa-info-circle'}"></i> ${message}`;
+            container.appendChild(toast);
+            
+            setTimeout(() => { toast.classList.remove('translate-y-2', 'opacity-0'); }, 50);
+            setTimeout(() => {
+                toast.classList.add('translate-y-2', 'opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        function exportAllDataJSON() {
+            exportAuditReport('json');
+        }
+
+        // Initial render on window load
+        window.onload = function() {
+            renderAll();
+        }
+    </script>
+</body>
+</html>
