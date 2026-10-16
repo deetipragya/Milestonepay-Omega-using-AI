@@ -1,0 +1,40 @@
+{
+  "project": {
+    "name": "E-commerce Website Redesign",
+    "baseBudget": 100000,
+    "contingency": 10000,
+    "escrow": 60000,
+    "released": 40000
+  },
+  "requirements": [
+    {
+      "id": "REQ-01",
+      "title": "User Auth & JWT Session",
+      "task": "PR #102 - Auth Engine",
+      "status": "Passed",
+      "evidence": "git commit 8f3c21a (Verified)"
+    },
+    {
+      "id": "REQ-02",
+      "title": "Product Catalog & Filters",
+      "task": "PR #105 - Catalog UI",
+      "status": "Passed",
+      "evidence": "git commit 4b9e11f (Verified)"
+    },
+    {
+      "id": "REQ-03",
+      "title": "Secure Checkout & Payment Gateway",
+      "task": "PR #112 - Gateway Integration",
+      "status": "Failed",
+      "evidence": "test_checkout_timeout.log (FAILED)"
+    },
+    {
+      "id": "REQ-04",
+      "title": "Order History & Invoicing",
+      "task": "PR #118 - Order Ledger",
+      "status": "Unverified",
+      "evidence": "NOT VERIFIED (Missing proof)"
+    }
+  ],
+  "tests": [
+    {
